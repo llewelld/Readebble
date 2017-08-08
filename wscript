@@ -1,7 +1,7 @@
 import os.path
 import json
 import shutil
-from sh import uglifyjs
+from sh import uglify
 from sh import jshint
 
 top = '.'
@@ -35,25 +35,37 @@ def build(ctx):
     ctx.set_group('pregenerate')
 
     # Run jshint on appinfo.json
-    ctx(rule=js_jshint, source='appinfo.json')
+    ctx(rule=js_jshint, source=ctx.path.find_node('appinfo.json'))
 
     # Run jshint on all the JavaScript files
     ctx(rule=js_jshint, source=ctx.path.ant_glob('src/js/src/**/*.js'))
 
     # Generate appinfo.h
-    ctx(rule=generate_appinfo_h, source='appinfo.json', target='../src/generated/appinfo.h')
+    ctx(rule=generate_appinfo_h, source=ctx.path.find_node('appinfo.json'), target='../src/generated/appinfo.h')
 
     # Generate keys.h
     ctx(rule=generate_keys_h, source='src/keys.json', target='../src/generated/keys.h')
 
     # Generate appinfo.js
-    ctx(rule=generate_appinfo_js, source='appinfo.json', target='../src/js/src/generated/appinfo.js')
+    ctx(rule=generate_appinfo_js, source=ctx.path.find_node('appinfo.json'), target='../src/js/src/generated/appinfo.js')
 
     # Generate keys.js
     ctx(rule=generate_keys_js, source='src/keys.json', target='../src/js/src/generated/keys.js')
 
     # Combine the source JS files into a single JS file.
-    ctx(rule=concatenate_js, source=ctx.path.ant_glob('src/js/src/**/*.js'), target='../src/js/pebble-js-app.js')
+    # ctx(rule=concatenate_js, source=ctx.path.ant_glob('src/js/src/**/*.js'), target='../src/js/pebble-js-app.js')
+    ctx.path.make_node('src/js/').mkdir()
+    #js_paths = ctx.path.ant_glob(['src/*.js', 'src/**/*.js'])
+    js_paths = ctx.path.ant_glob('src/js/src/**/*.js')
+    if js_paths:
+        print(js_paths)
+        #ctx(rule='cat ${SRC} > ${TGT}', source=js_paths, target='pebble-js-app.js')
+        ctx(rule='cat ${SRC} > ${TGT}', source=js_paths, target='../src/js/pebble-js-app.js')
+
+        has_js = True
+    else:
+        has_js = False
+
 
     # Now the main build process can happen, building multiple platforms
     for p in ctx.env.TARGET_PLATFORMS:
@@ -125,7 +137,7 @@ def generate_keys_js(task):
 
 def concatenate_js(task):
     inputs = (input.abspath() for input in task.inputs)
-    uglifyjs(*inputs, o=task.outputs[0].abspath(), b=True)
+    uglify(*inputs, o=task.outputs[0].abspath(), b=True)
 
 def js_jshint(task):
     inputs = (input.abspath() for input in task.inputs)
