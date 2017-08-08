@@ -53,7 +53,8 @@ Readebble.sendStory = function(story) {
 };
 
 Readebble.fetchHeadlines = function() {
-	http('GET', 'https://ajax.googleapis.com/ajax/services/feed/load', {v:'1.0', num:'30', q:Readebble.currentSubscription.url}, null, function (e) {
+	// http('GET', 'https://ajax.googleapis.com/ajax/services/feed/load', {v:'1.0', num:'30', q:Readebble.currentSubscription.url}, null, function (e) {
+	http('GET', 'https://api.rss2json.com/v1/api.json', {rss_url:Readebble.currentSubscription.url}, null, function (e) {
 		var res = JSON.parse(e.responseText);
 		debugLog(res);
 		if (res.responseStatus !== 200) {
