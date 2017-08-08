@@ -57,10 +57,10 @@ Readebble.fetchHeadlines = function() {
 	http('GET', 'https://api.rss2json.com/v1/api.json', {rss_url:Readebble.currentSubscription.url}, null, function (e) {
 		var res = JSON.parse(e.responseText);
 		debugLog(res);
-		if (res.responseStatus !== 200) {
+		if (res.status != "ok") {
 			return Readebble.sendError(TYPE.HEADLINE, 'Error: ' + res.responseDetails);
 		}
-		Readebble.headlines = res.responseData.feed.entries;
+		Readebble.headlines = res.items;
 		Readebble.sendHeadlines();
 	}, function (e) {
 		Readebble.sendError(TYPE.HEADLINE, e);
